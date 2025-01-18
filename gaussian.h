@@ -1,7 +1,7 @@
 #ifndef GAUSSIAN_H
 #define GAUSSIAN_H
-#include "distribution.h"
 #include <random>
+#include "distribution.h"
 
 class Gaussian: public Distribution{
     public:

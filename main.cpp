@@ -2,6 +2,7 @@
 #include <fstream>
 #include "gaussian.h"
 #include "stock.h"
+#include "loan.h"
 
 int main(){
     auto g = Gaussian(0.02, 0.1);
@@ -21,6 +22,11 @@ int main(){
         test_dump << "\n";
     }
     test_dump.close();
+
+    //Test the Loan class.
+    double interest_rate = 0.05;
+    auto l = Loan(1e5);
+    std::cout << l.monthly_interest(interest_rate) << std::endl;
 
     return 0;
 }
