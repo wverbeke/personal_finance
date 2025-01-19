@@ -3,6 +3,7 @@
 #include <random>
 #include "distribution.h"
 
+// TODO: Investigate how the random seeds work.
 class Gaussian: public Distribution{
     public:
         Gaussian(const double mean, const double std):

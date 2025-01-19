@@ -6,12 +6,6 @@
 #include <stdexcept>
 #include <cmath>
 
-// TODO Make a class to model interest rates. The interest rate should vary over time, but
-// variations should be relatively slow and strongly correlated over time.
-//class InterestRate{
-//
-//};
-
 class Loan{
     public:
         Loan(double total_amount):
