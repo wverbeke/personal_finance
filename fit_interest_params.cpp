@@ -1,31 +1,38 @@
 #include <iostream>
 #include <fstream>
+#include <sstream>
+#include <type_traits>
 #include <vector>
+#include <string>
 #include <stdexcept>
 #include "interest_rates.h"
 
-double l2_loss(const std::vector<double>& predicted_rates, const std::vector<double>& real_rates){
-    double loss = 0;
-    if(predicted_rates.size() != real_rates.size()){
-        throw std::runtime_error("Predicted and real rates must have the same size to compare them.");
+std::vector<double> read_rates(const std::string& path){
+    std::vector<double> ret;
+    std::ifstream file(path);
+    if(!file){
+        throw std::runtime_error("File " + path + " does not exist.");
     }
-    for(unsigned i = 0; i < predicted_rates.size(); ++i){
-        loss += (predicted_rates[i] + real_rates[i]);
+    std::string line;
+    while(std::getline(file, line)){
+        std::istringstream iss(line);
+        std::string date;
+        double value;
+        if(iss >> date >> value){
+            ret.push_back(value);
+        }
     }
-    return loss;
+    return ret;
 }
 
-// TODO 
-void find_parameters(unsigned num_steps_per_dim, const std::vector<double>& real_rates){
-    // mu_min, mu_max, theta_min, theta_max, sigma_min, sigma_max.
-}
-
+const std::string rate_path = "data/riksbanken_ranta_cleaned.txt";
 
 int main(){
     //Try to fit interest rates.
-    auto interest = InterestRatesOU(0.0, 1.0, 2.0, 3.0);
-    for(unsigned i = 0; i < 1000; ++i){
-        double new_interest = interest.sample_and_update();
-    }
+    auto true_interest = read_rates(rate_path);
+    auto interest = InterestRatesOU(1.0, 1.0, 1.0, 1.0);
+    auto delta = interest.optimize_gradient_descent(true_interest, 1e-8, 0.1, 10000);
+    std::cout << "Convergence delta = " << delta << std::endl;
+    std::cout << interest << std::endl;
     return 0;
 }

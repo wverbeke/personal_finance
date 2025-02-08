@@ -2,9 +2,11 @@
 #define INTEREST_RATE_H
 
 #include "gaussian.h"
+#include <ostream>
 
 // Model interest rates with a mean-reverting Ornstein-Uhlenbeck Process.
 class InterestRatesOU{
+    friend std::ostream& operator <<(std::ostream&, const InterestRatesOU&);
     public:
         // TODO: esetimate theta, mu, and sigma from Riksbanken data.
         // mu: mean interest rate.
@@ -54,10 +56,15 @@ class InterestRatesOU{
 // L(mu, theta, sigma | Delta_t) = 1/sqrt(2*pi*sigma^2) * exp(-(Delta_t - theta*(mu - R_t))^2 / 2*sigma^2)
 // ln(L) = 
 
+// Avoid zero division with sigma.
+double _zero_safe(double sigma){
+    return std::abs(sigma) > 1e-7 ? sigma : 1e-7;
+}
 
 double InterestRatesOU::log_likelihood_gradient_theta(const std::vector<double>& measured_rates) const{
     // Sum over all the observed interest rates.
     double sum = 0;
+    double s = _zero_safe(_sigma);
 
     // TODO: Check that more than 1 interest rate is passed;
     for(unsigned i = 0; i < measured_rates.size() - 1; ++i){
@@ -67,12 +74,14 @@ double InterestRatesOU::log_likelihood_gradient_theta(const std::vector<double>&
         double delta_r = measured_rates[i + 1] - measured_rates[i];
         sum += (_theta*_mu*_mu + _theta*r*r - _mu*delta_r - 2*_theta*_mu*r + r*delta_r);
     }
-    sum /= (_sigma*_sigma);
+    sum /= (s*s);
     return sum;
 }
 
+
 double InterestRatesOU::log_likelihood_gradient_mu(const std::vector<double>& measured_rates) const{
     double sum = 0;
+    double s = _zero_safe(_sigma);
     for(unsigned i = 0; i < measured_rates.size() - 1; ++i){
         double r = measured_rates[i];
         double delta_r = measured_rates[i + 1] - measured_rates[i];
@@ -81,12 +90,13 @@ double InterestRatesOU::log_likelihood_gradient_mu(const std::vector<double>& me
         //_sigma*_sigma can also be cached and shared between this and theta's gradient computation.
         sum += (_mu*_theta - delta_r - _theta*r);
     }
-    sum *= (_theta/(_sigma*_sigma));
+    sum *= (_theta/(s*s));
     return sum;
 }
 
 double InterestRatesOU::log_likelihood_gradient_sigma(const std::vector<double>& measured_rates) const{
     double sum = 0;
+    double s = _zero_safe(_sigma);
     for(unsigned i = 0; i < measured_rates.size() - 1; ++i){
 
         // TODO cache.
@@ -94,9 +104,9 @@ double InterestRatesOU::log_likelihood_gradient_sigma(const std::vector<double>&
         double delta_r = measured_rates[i + 1] - measured_rates[i];
 
         //_sigma*_sigma can also be cached and shared between this and theta's gradient computation.
-        sum += (1.0 - 1.0/(_sigma*_sigma) * (delta_r*delta_r + _theta*_theta*_mu*_mu + _theta*_theta*r*r - 2*_theta*_mu*delta_r - 2*_theta*_theta*_mu*r + 2*_theta*r*delta_r));
+        sum += (1.0 - 1.0/(s*s) * (delta_r*delta_r + _theta*_theta*_mu*_mu + _theta*_theta*r*r - 2*_theta*_mu*delta_r - 2*_theta*_theta*_mu*r + 2*_theta*r*delta_r));
     }
-    sum /= (_sigma);
+    sum /= (s);
     return sum;
 }
 
@@ -125,5 +135,10 @@ double InterestRatesOU::optimize_gradient_descent(const std::vector<double>& mea
 // TODO: Implement interest rates using autoregressive intergated moving average models.
 // TODO: Implement interest rates using a hidden markov model with a transition matrix between
 // different models.
+
+std::ostream& operator<<(std::ostream& os, const InterestRatesOU& interest){
+    os << "current rate = " << interest._current_rate << " | theta = " << interest._theta << " | mu = " << interest._mu << " | sigma = " << interest._sigma;
+    return os;
+}
 
 #endif
