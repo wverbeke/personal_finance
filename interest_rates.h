@@ -65,10 +65,9 @@ double InterestRatesOU::log_likelihood_gradient_theta(const std::vector<double>&
         // TODO Cache this since it is the same every time.
         double r = measured_rates[i];
         double delta_r = measured_rates[i + 1] - measured_rates[i];
-
-        //factor 2 in denominator and numerator removed.
-        sum += (_theta*_mu*_mu + _theta*r*r - _mu*delta_r - _theta*_mu*r + r*delta_r)/(_sigma*_sigma);
+        sum += (_theta*_mu*_mu + _theta*r*r - _mu*delta_r - 2*_theta*_mu*r + r*delta_r);
     }
+    sum /= (_sigma*_sigma);
     return sum;
 }
 
@@ -80,8 +79,9 @@ double InterestRatesOU::log_likelihood_gradient_mu(const std::vector<double>& me
 
         //factor 2 in denominator and numerator removed.
         //_sigma*_sigma can also be cached and shared between this and theta's gradient computation.
-        sum += (_mu*_theta*_theta - _theta*delta_r - _theta*_theta*r)/(_sigma*_sigma);
+        sum += (_mu*_theta - delta_r - _theta*r);
     }
+    sum *= (_theta/(_sigma*_sigma));
     return sum;
 }
 
@@ -94,8 +94,9 @@ double InterestRatesOU::log_likelihood_gradient_sigma(const std::vector<double>&
         double delta_r = measured_rates[i + 1] - measured_rates[i];
 
         //_sigma*_sigma can also be cached and shared between this and theta's gradient computation.
-        sum += (1/_sigma) - (1/(_sigma*_sigma*_sigma)) * (delta_r*delta_r + _theta*_theta*_mu*_mu + _theta*_theta*r*r - 2*_theta*_mu*delta_r - 2*_theta*_theta*_mu*r + 2*_theta*r*delta_r);
+        sum += (1.0 - 1.0/(_sigma*_sigma) * (delta_r*delta_r + _theta*_theta*_mu*_mu + _theta*_theta*r*r - 2*_theta*_mu*delta_r - 2*_theta*_theta*_mu*r + 2*_theta*r*delta_r));
     }
+    sum /= (_sigma);
     return sum;
 }
 
