@@ -75,7 +75,7 @@ double InterestRatesOU::log_likelihood_gradient_theta(const std::vector<double>&
         sum += (_theta*_mu*_mu + _theta*r*r - _mu*delta_r - 2*_theta*_mu*r + r*delta_r);
     }
     sum /= (s*s);
-    return sum;
+    return sum/measured_rates.size();
 }
 
 
@@ -91,7 +91,7 @@ double InterestRatesOU::log_likelihood_gradient_mu(const std::vector<double>& me
         sum += (_mu*_theta - delta_r - _theta*r);
     }
     sum *= (_theta/(s*s));
-    return sum;
+    return sum/measured_rates.size();
 }
 
 double InterestRatesOU::log_likelihood_gradient_sigma(const std::vector<double>& measured_rates) const{
@@ -107,7 +107,7 @@ double InterestRatesOU::log_likelihood_gradient_sigma(const std::vector<double>&
         sum += (1.0 - 1.0/(s*s) * (delta_r*delta_r + _theta*_theta*_mu*_mu + _theta*_theta*r*r - 2*_theta*_mu*delta_r - 2*_theta*_theta*_mu*r + 2*_theta*r*delta_r));
     }
     sum /= (s);
-    return sum;
+    return sum/measured_rates.size();
 }
 
 double InterestRatesOU::optimize_gradient_descent(const std::vector<double>& measured_rates, double convergence_threshold, double learning_rate, unsigned max_iterations){
@@ -119,9 +119,10 @@ double InterestRatesOU::optimize_gradient_descent(const std::vector<double>& mea
         double d_mu = log_likelihood_gradient_mu(measured_rates);
         double d_sigma = log_likelihood_gradient_sigma(measured_rates);
         delta = (std::abs(d_theta) + std::abs(d_mu) + std::abs(d_sigma));
-        _theta -= d_theta;
-        _mu -= d_mu;
-        _sigma -= d_sigma;
+        _theta -= learning_rate*d_theta;
+        _mu -= learning_rate*d_mu;
+        _sigma -= learning_rate*d_sigma;
+        ++iteration;
     }
 
     // See whether it converged or not.

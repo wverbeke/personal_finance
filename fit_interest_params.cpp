@@ -31,7 +31,7 @@ int main(){
     //Try to fit interest rates.
     auto true_interest = read_rates(rate_path);
     auto interest = InterestRatesOU(1.0, 1.0, 1.0, 1.0);
-    auto delta = interest.optimize_gradient_descent(true_interest, 1e-8, 0.1, 10000);
+    auto delta = interest.optimize_gradient_descent(true_interest, 1e-8, 0.003, 10000000);
     std::cout << "Convergence delta = " << delta << std::endl;
     std::cout << interest << std::endl;
     return 0;
