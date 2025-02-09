@@ -36,6 +36,16 @@ class InterestRatesOU{
             unsigned max_iterations=1e4
         );
 
+        double mu() const{
+            return _mu;
+        }
+        double theta() const{
+            return _theta;
+        }
+        double sigma() const{
+            return _sigma;
+        }
+    
     private:
         double _current_rate;
         double _mu;
@@ -58,7 +68,7 @@ class InterestRatesOU{
 
 // Avoid zero division with sigma.
 double _zero_safe(double sigma){
-    return std::abs(sigma) > 1e-7 ? sigma : 1e-7;
+    return std::abs(sigma) > 1e-4 ? sigma : 1e-4;
 }
 
 double InterestRatesOU::log_likelihood_gradient_theta(const std::vector<double>& measured_rates) const{
@@ -118,6 +128,7 @@ double InterestRatesOU::optimize_gradient_descent(const std::vector<double>& mea
         double d_theta = log_likelihood_gradient_theta(measured_rates);
         double d_mu = log_likelihood_gradient_mu(measured_rates);
         double d_sigma = log_likelihood_gradient_sigma(measured_rates);
+        //std::cout << "d_theta = " << d_theta << " | d_mu = " << d_mu << " | d_sigma = " << d_sigma << std::endl;
         delta = (std::abs(d_theta) + std::abs(d_mu) + std::abs(d_sigma));
         _theta -= learning_rate*d_theta;
         _mu -= learning_rate*d_mu;
